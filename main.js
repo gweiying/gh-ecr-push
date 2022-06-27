@@ -23,10 +23,15 @@ function run(cmd, options = {}) {
     });
 }
 
-run(`$(aws ecr get-login --no-include-email --region ${awsRegion})`);
-
-const accountData = run(`aws sts get-caller-identity --output json`);
+const accountLoginPassword = `aws ecr get-login-password --region ${awsRegion}`;
+const accountData = run(`aws sts get-caller-identity --output json --region ${awsRegion}`);
 const awsAccountId = JSON.parse(accountData).Account;
+
+let imageUrl;
+
+run(
+    `${accountLoginPassword} | docker login --username AWS --password-stdin ${awsAccountId}.dkr.ecr.${awsRegion}.amazonaws.com`
+);
 
 if (direction === 'push') {
     console.log(`Pushing local image ${localImage} to ${awsAccountId}.dkr.ecr.${awsRegion}.amazonaws.com/${image}`);
